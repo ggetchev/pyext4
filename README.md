@@ -32,6 +32,6 @@ sudo mount -o loop test.img ./test
 Now you can go into the test directory and do whatever you want.
 When you finish, just execute 
 ```bash
-exit
+sudo umount ./test
 ```
 And you have the test.img ext4 filesystem.
