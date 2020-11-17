@@ -69,6 +69,8 @@ class Ext4:
         ret = []
         cpath = ctypes.c_char_p(path.encode("ascii"))
         size = self._list_contents(cpath, None)
+        if size == 0:
+            return ret
         opath = ctypes.create_string_buffer(size)
         self._list_contents(cpath, opath)
         raw = opath.raw
