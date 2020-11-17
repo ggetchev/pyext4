@@ -28,8 +28,6 @@ import ctypes
 import struct
 import os 
 
-pth = os.path.join(os.path.dirname(__file__), "ext4c.so")
-print(pth)
 class Ext4:
     __ext4 = ctypes.CDLL(os.path.join(os.path.dirname(__file__), "ext4c.so"))
 

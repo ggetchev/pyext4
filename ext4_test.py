@@ -43,6 +43,8 @@ with open(img_file, "rb") as f:
     with mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ, flags=mmap.MAP_PRIVATE) as mm:
         with ext4.Ext4(mm) as e4:
             contents = e4.list_contents(indir)
+            if len(contents) == 0:
+                print("Cannot extract {}!".format(target_file))
             for ino, name in contents:
                 if name == infile:
                     data = e4.get_contents(ino)

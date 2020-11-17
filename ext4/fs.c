@@ -324,7 +324,7 @@ uint64_t fs_list_contents(struct FS * fs, const char * path, uint8_t * outdata) 
                     done = 1;
                 }
 l_iterate:
-                if(node) {
+                if(node && !fail) {
                     void * it;
                     uint8_t * optr = outdata;
                     for(it = list_begin(node->children); it != list_end(node->children); it = list_next(it)) {

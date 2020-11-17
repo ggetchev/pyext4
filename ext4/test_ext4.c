@@ -49,8 +49,9 @@ struct data_ref {
 	uint64_t length;
 };
 
-void process(uint8_t * mem, uint64_t size, const char * inpath, const char * output_filename) {
+uint8_t process(uint8_t * mem, uint64_t size, const char * inpath, const char * output_filename) {
     
+	uint8_t ret = 0;
 	// find the filename and the directory name
 	uint32_t inlen = strlen(inpath);
 	char * buf = (char *) malloc(inlen + 1);
@@ -68,37 +69,41 @@ void process(uint8_t * mem, uint64_t size, const char * inpath, const char * out
 
 		ext4_init(mem, size);
 		uint64_t msize = ext4_list_contents(input_directory, NULL);
-		uint8_t * m = (uint8_t *) malloc(msize);
-		if(m) {
-			ext4_list_contents(input_directory, m);
-			uint8_t * p = m;
-			while(p != (m + msize)) {
-				struct ino_min_map * mm = (struct ino_min_map *) p;
-				if(!memcmp(mm->name, input_filename, infile_len)) {
-					uint64_t msize = ext4_get_contents(mm->ino, NULL);
-					uint8_t * bytes = (uint8_t *) malloc(msize);
-					if(bytes) {
-						if(ext4_get_contents(mm->ino, bytes)) {
-							int fd = open(output_filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-							if(fd > -1) {
-								struct data_ref * dr = (struct data_ref *) bytes;
-								while(dr != (struct data_ref *)(bytes + msize)) {
-									write(fd, mem + dr->start, dr->length);
-									dr ++;
+		if(msize) {
+			uint8_t * m = (uint8_t *) malloc(msize);
+			if(m) {
+				ext4_list_contents(input_directory, m);
+				uint8_t * p = m;
+				while(p != (m + msize)) {
+					struct ino_min_map * mm = (struct ino_min_map *) p;
+					if(!memcmp(mm->name, input_filename, infile_len)) {
+						uint64_t msize = ext4_get_contents(mm->ino, NULL);
+						uint8_t * bytes = (uint8_t *) malloc(msize);
+						if(bytes) {
+							if(ext4_get_contents(mm->ino, bytes)) {
+								int fd = open(output_filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+								if(fd > -1) {
+									struct data_ref * dr = (struct data_ref *) bytes;
+									while(dr != (struct data_ref *)(bytes + msize)) {
+										write(fd, mem + dr->start, dr->length);
+										dr ++;
+									}
+									close(fd);
+									ret = 1;
 								}
-								close(fd);
 							}
+							free(bytes);
 						}
-						free(bytes);
 					}
+					p += sizeof(uint64_t) + 1 + mm->size;
 				}
-				p += sizeof(uint64_t) + 1 + mm->size;
+				free(m);
 			}
-			free(m);
 		}
 	    ext4_close();
 	    free(buf);
     }
+	return ret;
 }
 
 
@@ -121,7 +126,9 @@ int main(int argc, const char * argv[]) {
         int f = open(argv[1], O_RDONLY);
         void * mem = mmap(NULL, size, PROT_READ, MAP_PRIVATE, f, 0);
         if(mem) {
-            process(mem, size, argv[2], argv[3]);
+            if(!process(mem, size, argv[2], argv[3])) {
+            	printf("Failed to extract %s ...\n", argv[2]);
+            }
             munmap(mem, size);
         }
     } else {
