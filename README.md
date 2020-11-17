@@ -1,5 +1,8 @@
 # pyext4
 
+## Description
+This small project reads ext4 images and extracts files from them without mounting.
+
 ## How to build
 ```bash
 make
