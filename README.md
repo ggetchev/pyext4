@@ -8,6 +8,9 @@ This small project reads ext4 images and extracts files from them without mounti
 make
 ``` 
 
+## How to use
+see ext4_test.py
+
 ## How to test the C part 
 ```bash
 cd ext4
